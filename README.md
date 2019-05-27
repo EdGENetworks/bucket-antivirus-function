@@ -147,7 +147,11 @@ following policy document
       },
       {
          "Action":[
-            "s3:*"
+            "s3:*",
+            "dynamodb:*",
+            "logs:CreateLogStream",
+            "logs:CreateLogGroup",
+            "logs:PutLogEvents"
          ],
          "Effect":"Allow",
          "Resource":"*"
@@ -190,6 +194,7 @@ the table below for reference.
 | Variable | Description | Default | Required |
 | --- | --- | --- | --- |
 | AV_DEFINITION_S3_BUCKET | Bucket containing antivirus definition files |  | Yes |
+| AV_DEFINITION_DYNAMO_TABLE | Log details in to Given Dynamodb Table, Table should exists first with PK id | No | Yes |
 | AV_DEFINITION_S3_PREFIX | Prefix for antivirus definition files | clamav_defs | No |
 | AV_DEFINITION_PATH | Path containing files at runtime | /tmp/clamav_defs | No |
 | AV_SCAN_START_SNS_ARN | SNS topic ARN to publish notification about start of scan | | No |
@@ -205,6 +210,7 @@ the table below for reference.
 | DATADOG_API_KEY | API Key for pushing metrics to DataDog (optional) | | No |
 | AV_PROCESS_ORIGINAL_VERSION_ONLY | Controls that only original version of an S3 key is processed (if bucket versioning is enabled) | False | No |
 | AV_DELETE_INFECTED_FILES | Controls whether infected files should be automatically deleted | False | No |
+
 
 ## S3 Bucket Policy Examples
 
