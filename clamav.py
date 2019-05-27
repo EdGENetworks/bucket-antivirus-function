@@ -16,8 +16,11 @@ import botocore
 import hashlib
 import os
 import pwd
+import calendar
+import time
 import re
 from common import *
+from dynamo_wrapper import *
 from subprocess import check_output, Popen, PIPE, STDOUT
 
 
@@ -106,7 +109,7 @@ def md5_from_s3_tags(bucket, key):
     return ""
 
 
-def scan_file(path):
+def scan_file(path, trans_id):
     av_env = os.environ.copy()
     av_env["LD_LIBRARY_PATH"] = CLAMAVLIB_PATH
     print("Starting clamscan of %s." % path)
@@ -131,6 +134,10 @@ def scan_file(path):
     elif av_proc.returncode == 1:
         return AV_STATUS_INFECTED
     else:
+        updated_date = calendar.timegm(time.gmtime())
+        data = {"scan_state": "Failed In Scan",  "updated_date": updated_date}
+        query = {"id": trans_id}
+        update_data(query, data)
         msg = "Unexpected exit code from clamscan: %s.\n" % av_proc.returncode
         print(msg)
         raise Exception(msg)
