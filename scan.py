@@ -18,7 +18,9 @@ import copy
 import json
 import metrics
 import urllib
+from dynamo_wrapper import insert_data, update_data
 from common import *
+import time, calendar
 from datetime import datetime
 from distutils.util import strtobool
 
@@ -31,7 +33,7 @@ def event_object(event):
     if (not bucket) or (not key):
         print("Unable to retrieve object from event.\n%s" % event)
         raise Exception("Unable to retrieve object from event.")
-    return s3.Object(bucket, key)
+    return s3.Object(bucket, key), bucket, key
 
 def verify_s3_object_version(s3_object):
     # validate that we only process the original version of a file, if asked to do so
@@ -139,17 +141,25 @@ def sns_scan_results(s3_object, result):
     }
     )
 
-
 def lambda_handler(event, context):
     start_time = datetime.utcnow()
     print("Script starting at %s\n" %
           (start_time.strftime("%Y/%m/%d %H:%M:%S UTC")))
-    s3_object = event_object(event)
+    s3_object, bucket, key_name  = event_object(event)
+    inserted_date = calendar.timegm(time.gmtime())
+    updated_date = calendar.timegm(time.gmtime())
+    data_to_store = {"s3_key": key_name, "bucket_name": bucket, "inserted_date": inserted_date,
+                     "updated_date": updated_date, "scan_state": "In Process"}
+    trans_id = insert_data(data_to_store)
     verify_s3_object_version(s3_object)
     sns_start_scan(s3_object)
     file_path = download_s3_object(s3_object, "/tmp")
     clamav.update_defs_from_s3(AV_DEFINITION_S3_BUCKET, AV_DEFINITION_S3_PREFIX)
-    scan_result = clamav.scan_file(file_path)
+    scan_result = clamav.scan_file(file_path, trans_id)
+    updated_date = calendar.timegm(time.gmtime())
+    data = {"scan_state": scan_result,  "updated_date": updated_date}
+    query = {"id": trans_id}
+    update_data(query, data)
     print("Scan of s3://%s resulted in %s\n" % (os.path.join(s3_object.bucket_name, s3_object.key), scan_result))
     if "AV_UPDATE_METADATA" in os.environ:
         set_av_metadata(s3_object, scan_result)
