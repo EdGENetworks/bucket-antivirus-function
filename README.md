@@ -194,7 +194,7 @@ the table below for reference.
 | Variable | Description | Default | Required |
 | --- | --- | --- | --- |
 | AV_DEFINITION_S3_BUCKET | Bucket containing antivirus definition files |  | Yes |
-| AV_DEFINITION_DYNAMO_TABLE | Log details in to Given Dynamodb Table, Table should exists first with PK id | No | Yes |
+| AV_DEFINITION_DYNAMO_TABLE | Log details in to Given Dynamodb Table, Table should exists first with PK id |  | Yes |
 | AV_DEFINITION_S3_PREFIX | Prefix for antivirus definition files | clamav_defs | No |
 | AV_DEFINITION_PATH | Path containing files at runtime | /tmp/clamav_defs | No |
 | AV_SCAN_START_SNS_ARN | SNS topic ARN to publish notification about start of scan | | No |
